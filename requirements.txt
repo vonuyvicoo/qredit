@@ -1,0 +1,8 @@
+uvicorn
+fastapi
+prisma
+pyjwt
+passlib
+bcrypt
+pydantic[email]
+python-dotenv

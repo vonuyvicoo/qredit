@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider             = "prisma-client-py"
+  interface            = "sync"
+  recursive_type_depth = 5
+}
+
+model Client {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    name String 
+    encrypted_token String
+
+    documents Document[]
+    batch_jobs BatchJob[]
+
+    @@map("client")
+}
+
+model Document {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    client_id String @db.Uuid
+    client Client @relation(fields: [client_id], references: [id])
+    filename         String 
+    document_type   DocumentType 
+    status                  DocumentStatus 
+    file_ref          String
+    password          String?
+    created_at        DateTime @default(now())
+    completed_at      DateTime @updatedAt 
+    document_batch_jobs DocumentBatchJob[]
+    transactions Transaction[]
+    metrics Metric[]
+
+    @@map("document")
+}
+
+model Transaction {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    document_id String @db.Uuid
+    document Document @relation(fields: [document_id], references: [id])
+    credit_cents Int
+    debit_cents Int
+    balance_cents Int
+    category TransactionCategory 
+    subcategory String
+    type TransactionType
+    is_edited Boolean
+
+    @@map("transaction")
+}
+
+model Metric {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    document_id String @db.Uuid
+    document Document @relation(fields: [document_id], references: [id])
+    total_inflow_cents Int
+    total_outflow_cents Int
+    net_flow_cents Int 
+    category_breakdown Json
+    extended_metrics Json
+    fraud_score Float
+    fraud_signals Json
+    completeness_score Float
+
+    @@map("metric")
+}
+
+model BatchJob {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    client_id String @db.Uuid
+    client Client @relation(fields: [client_id], references: [id])
+    document_batch_jobs DocumentBatchJob[]
+}
+
+model DocumentBatchJob {
+    id String @id @db.Uuid @default(dbgenerated("gen_random_uuid()"))
+    document_id String @db.Uuid
+    document Document @relation(fields: [document_id], references: [id])
+    batch_job_id String @db.Uuid
+    batch_job BatchJob @relation(fields: [batch_job_id], references: [id])
+}
+
+enum TransactionType {
+    CREDIT
+    DEBIT
+}
+
+enum TransactionCategory {
+    INCOME
+    EXPENSE
+    OTHER
+}
+
+enum DocumentStatus {
+    PROCESSING
+    COMPLETED
+    FAILED
+}
+
+enum DocumentType {
+    // Financial
+    BANK_STATEMENT
+    PASSBOOK
+    CREDIT_CARD_STATEMENT
+    PAYSLIP
+    BILL
+    CREDIT_REPORT
+    SALES_INVOICE
+    AFS
+    LOAN_STATEMENT
+    //gov
+    GOVT_ID
+    ITR
+    BIR_2303
+    BIR_2307
+    CERT_OF_EMPLOYMENT
+    SECRETARYS_CERT
+    TIN_ID
+    //bsuiness
+    BUSINESS_REG_DTI
+    BUSINESS_REG_SEC
+    CERT_OF_INCORPORATION
+    GENERAL_INFO_SHEET
+    BUSINESS_PERMIT
+    MAYORS_PERMIT
+    PURCHASE_ORDER
+    BILL_OF_LADING
+    //other
+    PROOF_OF_BILLING
+    REMITTANCE_SLIP
+    LAND_TITLE
+    VEHICLE_REG
+    INSURANCE_POLICY
+    LOAN_AGREEMENT
+    BRGY_CLEARANCE
+    GENERAL_DOCUMENT
+    OTHER_DOCUMENT
+}
+
+
