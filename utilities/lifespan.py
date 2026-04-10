@@ -7,6 +7,6 @@ from database.config import db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    db.connect()
+    await db.connect()
     yield
-    db.disconnect()
+    await db.disconnect()

@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse
 
 
 def add(app: FastAPI):
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request, exc: RequestValidationError):
+    async def _handler(_request: Request, exc: RequestValidationError):
         error_format = {
             "status": "fail",
             "message": "Request Validation Error",

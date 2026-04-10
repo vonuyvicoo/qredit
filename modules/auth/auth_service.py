@@ -1,48 +1,54 @@
-from datetime import timedelta
+import secrets
 
 from fastapi import HTTPException
-from prisma.models import User
 from starlette import status
 
 from database.config import db
 from modules.auth.dto.login_dto import LoginDto
-from modules.user.dto.create_user_dto import CreateUserDto
-from utilities.bcrypt_hashing import HashingUtils
-from utilities.jwtUtils import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from modules.auth.dto.register_dto import RegisterDto
+from utilities.encryption import EncryptionUtils
+from utilities.jwtUtils import create_access_token
 
 
-def register(body: CreateUserDto) -> User:
-    existing = db.user.find_unique(where={"email": body.email})
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Email already exist"
-        )
+class AuthService:
+    def __init__(self) -> None:
+        self.db = db
 
-    body.password = HashingUtils.hash(body.password)
+    async def register(self, body: RegisterDto) -> dict:
+        plain_token = secrets.token_urlsafe(32)
+        encrypted = EncryptionUtils.encrypt(plain_token)
 
-    return db.user.create(data={
-        "name": body.name,
-        "email": body.email,
-        "password": body.password,
-    })
+        client = await self.db.client.create(data={
+            "name": body.name,
+            "encrypted_token": encrypted,
+        })
+
+        return {"client_id": client.id, "secret": plain_token}
+
+    async def login(self, body: LoginDto) -> str:
+        client = await self.db.client.find_unique(where={"id": body.client_id})
+
+        if client is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+
+        try:
+            plain = EncryptionUtils.decrypt(client.encrypted_token)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+
+        if plain != body.secret:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+
+        return create_access_token(payload={"client_id": client.id})
 
 
-def login(body: LoginDto) -> str:
-    user = db.user.find_unique(where={"email": body.email})
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Email not found"
-        )
-
-    if not HashingUtils.validate(plain_password=body.password, hashed_password=user.password):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Invalid Password"
-        )
-
-    return create_access_token(
-        payload={"user_id": user.id},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
+auth_service = AuthService()

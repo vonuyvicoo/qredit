@@ -5,7 +5,7 @@ datasource db {
 
 generator client {
   provider             = "prisma-client-py"
-  interface            = "sync"
+  interface            = "asyncio"
   recursive_type_depth = 5
 }
 
@@ -74,6 +74,8 @@ model BatchJob {
     client_id String @db.Uuid
     client Client @relation(fields: [client_id], references: [id])
     document_batch_jobs DocumentBatchJob[]
+
+    @@map("batch_job")
 }
 
 model DocumentBatchJob {
@@ -82,6 +84,8 @@ model DocumentBatchJob {
     document Document @relation(fields: [document_id], references: [id])
     batch_job_id String @db.Uuid
     batch_job BatchJob @relation(fields: [batch_job_id], references: [id])
+
+    @@map("document_batch_job")
 }
 
 enum TransactionType {

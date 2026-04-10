@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class LoginDto(BaseModel):
-    email: EmailStr
-    password: str
+    client_id: str
+    secret: str
