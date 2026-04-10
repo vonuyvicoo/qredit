@@ -15,6 +15,9 @@ class Config:
     HASH_SALT: str = _require("HASH_SALT")
     HASH_ALGORITHM: str = _require("HASH_ALGORITHM")
     ENCRYPTION_KEY: str = _require("ENCRYPTION_KEY")
+    SUPABASE_URL: str = _require("SUPABASE_URL")
+    SUPABASE_KEY: str = _require("SUPABASE_KEY")
+    SUPABASE_BUCKET: str = _require("SUPABASE_BUCKET")
 
 
 config = Config()

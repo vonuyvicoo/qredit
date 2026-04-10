@@ -26,7 +26,7 @@ model Document {
     client Client @relation(fields: [client_id], references: [id])
     filename         String 
     document_type   DocumentType 
-    status                  DocumentStatus 
+    status                  DocumentStatus  @default(PROCESSING)
     file_ref          String
     password          String?
     created_at        DateTime @default(now())

@@ -7,3 +7,10 @@ bcrypt
 pydantic[email]
 python-dotenv
 cryptography
+supabase
+python-multipart
+pytesseract
+Pillow
+pdfplumber
+pdf2image
+python-docx
