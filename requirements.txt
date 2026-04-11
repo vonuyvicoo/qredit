@@ -14,3 +14,4 @@ Pillow
 pdfplumber
 pdf2image
 python-docx
+python-magic
